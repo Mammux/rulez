@@ -1,12 +1,20 @@
 use std::collections::HashMap;
 use std::cmp::max;
 
+/*  An Entry instance represents the possibility of Instances in the store with type Entry.id.
+    It is assumed that there will be at least Entry{"rule"} and Entry{"user"}. 
+*/
+
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Entry {
+struct Entry { 
     id: String
 }
+
+/*  A Field instance represents the possibility of a field being set for Instances of type
+    Field.entry. 
+*/
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -16,6 +24,9 @@ struct Field<'a> {
     id: String
 }
 
+/*  An Instance is the main type of object in the store.
+*/
+
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -24,6 +35,11 @@ struct Instance<'a> {
     id: String
 }
 
+/*  An Assignment is type of potential change, on a particular Field on a 
+    particular Entry. It can later be used to create an Action that involves
+    an Instance and can be checked vs. rules.
+*/
+
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -31,6 +47,11 @@ struct Assignment<'a> {
     field: &'a Field<'a>,
     value: String
 }
+
+/*  An Action is an Assignment on a particular Instance at a particular time
+    that is either "proposed" (not checked vs rules yet) or has actually become 
+    part of the Timeline in the store.
+*/
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -41,6 +62,9 @@ struct Action<'a> {
     assignment: &'a Assignment<'a>
 }
 
+/*  A Timeline is the list of timestampted Actions that have been accepted for one
+    Instance in an object store. */
+
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -49,6 +73,8 @@ struct Timeline<'a> {
     actions: &'a [&'a Action<'a>]
 }
 
+/*  A State is a read-only image of the field values of an instance at a particular time. */
+
 #[allow(dead_code)]
 #[derive(Debug)]
 struct State {
@@ -56,6 +82,8 @@ struct State {
     values: HashMap<String,String>,
     timestamp: u64
 }
+
+/*  This convenience function gets the state of an Instance based on its Timeline */
 
 #[allow(dead_code)]
 fn get_state(timeline: Timeline, point: u64) -> State {
@@ -75,11 +103,16 @@ fn get_state(timeline: Timeline, point: u64) -> State {
     return st;
 }
 
+/*  Stub for a method that verifies an Assignment using a particular rule.
+ */
+
 #[allow(dead_code)]
 fn allowed(instance: &Instance, _assignment: &Assignment) -> bool {
     if instance.entry.id != "rule" { return true; }
     return false;
 }
+
+/*  Creates a new Instance */
 
 fn mk_instance(entry: &Entry, id: String) -> Instance {
     return Instance{ entry: entry, id: id };
