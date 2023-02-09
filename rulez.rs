@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::cmp::max;
+use evalexpr::Value;
 
 /*  An Entry instance represents the possibility of Instances in the store with type Entry.id.
     It is assumed that there will be at least Entry{"rule"} and Entry{"user"}. 
@@ -92,7 +93,7 @@ fn get_state(timeline: Timeline, point: u64) -> State {
     let mut acts = timeline.actions.to_vec(); // goes on the heap
     acts.sort(); // sorts based on timestamp
     for a in acts {
-	if a.timestamp <= point && allowed(a.instance, a.assignment) {
+	if a.timestamp <= point && allowed(a.instance, &timeline, point, a.assignment) {
 	    stamp = max(stamp, a.timestamp);
 	    hm.insert(a.assignment.field.id.clone(), a.assignment.value.clone());
 	}
@@ -107,8 +108,12 @@ fn get_state(timeline: Timeline, point: u64) -> State {
  */
 
 #[allow(dead_code)]
-fn allowed(instance: &Instance, _assignment: &Assignment) -> bool {
+fn allowed(instance: &Instance, timeline: &Timeline, point: u64, assignment: &Assignment) -> bool {
+    // TODO: find all "rule" instances in the object store, check each one
+    // OR: find the root "rule" and start evaluating
     if instance.entry.id != "rule" { return true; }
+    // let st = get_state(timeline, point);
+
     return false;
 }
 
@@ -120,7 +125,7 @@ fn mk_instance(entry: &Entry, id: String) -> Instance {
 
 fn main() {
     let v = Entry{ id: "rule".to_string() }; // magic entry id for rules
-    let u = Entry{ id: "user".to_string() }; // magic entry id for users
+    let u = Entry{ id: "user".to_string() }; // magic entry id for users (actual people)
     let c = Field{ entry: &v, id: "name".to_string() };
     let a = Assignment{ field: &c, value: "Ground rule".to_string() };
     let a2 = Assignment{ field: &c, value: "First rule".to_string() };
@@ -144,5 +149,22 @@ fn main() {
     println!("Action: {:#?}", t);
     println!("Timeline: {:#?}", tl); 
     */
+}
+
+#[cfg(test)]
+mod tests {
+
+    use evalexpr::*;
+
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn eval_works() {
+        assert_eq!(eval("1 + 2 + 3"), Ok(Value::from(6)));
+    }
 }
 
