@@ -74,6 +74,29 @@ struct Timeline<'a> {
     actions: &'a [&'a Action<'a>]
 }
 
+
+#[allow(dead_code)]
+#[derive(Debug)]
+struct ObjectStore<'a> {
+    entries: Vec<Box<Entry>>,
+    fields: Vec<Box<Field<'a>>>,
+    instances: Vec<Box<Instance<'a>>>,
+    assignements: Vec<Box<Assignment<'a>>>,
+    actions: Vec<Box<Action<'a>>>,
+    timelines: Vec<Box<Timeline<'a>>>
+}
+
+impl ObjectStore<'_> {
+    fn new<'a>() -> ObjectStore<'a> {
+        ObjectStore{ entries: vec!(), fields: vec!(), instances: vec!(), assignements: vec!(), actions: vec!(), timelines: vec!() }
+    }
+
+    fn add_entry(&mut self, entry: Entry) {
+        let e = Box::new(entry);
+        self.entries.push(e);
+    }
+}
+
 /*  A State is a read-only image of the field values of an instance at a particular time. */
 
 #[allow(dead_code)]
@@ -86,8 +109,9 @@ struct State {
 
 /*  This convenience function gets the state of an Instance based on its Timeline */
 
+/* 
 #[allow(dead_code)]
-fn get_state(timeline: Timeline, point: u64) -> State {
+fn get_state(timeline: &Timeline, point: u64) -> State {
     let mut hm = HashMap::new();
     let mut stamp = 0;
     let mut acts = timeline.actions.to_vec(); // goes on the heap
@@ -103,6 +127,7 @@ fn get_state(timeline: Timeline, point: u64) -> State {
 		    timestamp: stamp}; 
     return st;
 }
+*/
 
 /*  Stub for a method that verifies an Assignment using a particular rule.
  */
@@ -123,23 +148,43 @@ fn mk_instance(entry: &Entry, id: String) -> Instance {
     return Instance{ entry: entry, id: id };
 }
 
-fn main() {
+fn mk_object_store<'a>() -> ObjectStore<'a>{
+    let mut os = ObjectStore::new();
+
+    os.add_entry(Entry{ id: "rule".to_string() });
+
+    // os.entries.push(Box::new(Entry{ id: "rule".to_string() })); // magic entry id for rules
+    // os.entries.push(Box::new(Entry{ id: "user".to_string() })); // magic entry id for users (actual people)
+    // os.fields.push(Box::new(Field{ entry: &v, id: "name".to_string() }));
+
+    os
+}
+
+    /*
     let v = Entry{ id: "rule".to_string() }; // magic entry id for rules
     let u = Entry{ id: "user".to_string() }; // magic entry id for users (actual people)
     let c = Field{ entry: &v, id: "name".to_string() };
     let a = Assignment{ field: &c, value: "Ground rule".to_string() };
     let a2 = Assignment{ field: &c, value: "First rule".to_string() };
-    let i = Instance{ entry: &v, id: "rule-0".to_string() };
+    let i = Box::new(Instance{ entry: &v, id: "rule-0".to_string() });
     let t = Action{ instance: &i, assignment: &a, timestamp: 1000 };
     let t2 = Action{ instance: &i, assignment: &a2, timestamp: 2000 };
     let ts = [ &t, &t2 ];
+    let i2 = Box::new(mk_instance(&u, "bobby".to_string()));
     let tl = Timeline{ instance: &i,
 		       actions: &ts };
+    let tl2 = Timeline{ instance: &i2, actions: &[]};
+    */
 
-    let state = get_state(tl, 1500);
-    let _i2 = mk_instance(&u, "bobby".to_string());
-    
-    println!("{:?}", state);
+fn main() {
+
+    // let tls = mk_test_timeline();
+
+    // let state = get_state(tls.get(0).unwrap(), 1500);
+
+
+    let os = mk_object_store();
+    println!("{:?}", &os);
 
     /*
     println!("Entry: {:#?}", v);
