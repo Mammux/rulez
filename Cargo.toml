@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 evalexpr = "8.1.0"
+elsa = "1.8.0"
 
 [[bin]]
 name = "rulez"
-path = "rulez.rs"
+path = "lib.rs"

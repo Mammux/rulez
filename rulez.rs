@@ -1,13 +1,13 @@
 use std::collections::HashMap;
-use std::cmp::max;
-use evalexpr::Value;
+// use std::cmp::max;
+// use evalexpr::Value;
 
 /*  An Entry instance represents the possibility of Instances in the store with type Entry.id.
     It is assumed that there will be at least Entry{"rule"} and Entry{"user"}. 
 */
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Entry { 
     id: String
@@ -20,8 +20,8 @@ struct Entry {
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Field<'a> {
-    entry: &'a Entry,
+struct Field {
+    entry: String,
     id: String
 }
 
@@ -29,10 +29,10 @@ struct Field<'a> {
 */
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Instance<'a> {
-    entry: &'a Entry,
+struct Instance {
+    entry: String,
     id: String
 }
 
@@ -44,8 +44,9 @@ struct Instance<'a> {
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Assignment<'a> {
-    field: &'a Field<'a>,
+struct Assignment {
+    id: String,
+    field: String,
     value: String
 }
 
@@ -57,10 +58,10 @@ struct Assignment<'a> {
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Action<'a> {
+struct Action {
     timestamp: u64, // important that this is first for PartialOrd and Ord
-    instance: &'a Instance<'a>,
-    assignment: &'a Assignment<'a>
+    instance: String,
+    assignment: String
 }
 
 /*  A Timeline is the list of timestampted Actions that have been accepted for one
@@ -69,32 +70,49 @@ struct Action<'a> {
 #[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-struct Timeline<'a> {
-    instance: &'a Instance<'a>,
-    actions: &'a [&'a Action<'a>]
+struct Timeline {
+    instance: String,
+    actions: [String]
 }
 
 
 #[allow(dead_code)]
 #[derive(Debug)]
-struct ObjectStore<'a> {
+struct ObjectStore {
     entries: Vec<Box<Entry>>,
-    fields: Vec<Box<Field<'a>>>,
-    instances: Vec<Box<Instance<'a>>>,
-    assignements: Vec<Box<Assignment<'a>>>,
-    actions: Vec<Box<Action<'a>>>,
-    timelines: Vec<Box<Timeline<'a>>>
+    fields: Vec<Box<Field>>,
+    instances: Vec<Box<Instance>>,
+    assignments: Vec<Box<Assignment>>,
+    actions: Vec<Box<Action>>,
+    timelines: Vec<Box<Timeline>>
 }
 
-impl ObjectStore<'_> {
-    fn new<'a>() -> ObjectStore<'a> {
-        ObjectStore{ entries: vec!(), fields: vec!(), instances: vec!(), assignements: vec!(), actions: vec!(), timelines: vec!() }
+impl ObjectStore {
+    fn new() -> ObjectStore {
+        ObjectStore{ entries: vec!(), fields: vec!(), instances: vec!(), assignments: vec!(), actions: vec!(), timelines: vec!() }
     }
 
     fn add_entry(&mut self, entry: Entry) {
         let e = Box::new(entry);
         self.entries.push(e);
     }
+
+    fn add_field(&mut self, field: Field) {
+        let f = Box::new(field);
+        self.fields.push(f);
+    }
+
+/*
+    fn get_entry(self, id: String) -> & 'static Entry {
+        let b = self.entries.iter().find( |&x| *x.id == id);
+        return &((b.unwrap().to_owned()).clone());
+    }
+
+    fn get_field(self, id: String) -> & 'static Field {
+        let b = self.fields.iter().find( |&&x| *x.id == id);
+        return b.unwrap().clone();
+    }
+    */
 }
 
 /*  A State is a read-only image of the field values of an instance at a particular time. */
@@ -133,10 +151,10 @@ fn get_state(timeline: &Timeline, point: u64) -> State {
  */
 
 #[allow(dead_code)]
-fn allowed(instance: &Instance, timeline: &Timeline, point: u64, assignment: &Assignment) -> bool {
+fn allowed(instance: &Instance, _timeline: &Timeline, _point: u64, _assignment: &Assignment) -> bool {
     // TODO: find all "rule" instances in the object store, check each one
     // OR: find the root "rule" and start evaluating
-    if instance.entry.id != "rule" { return true; }
+    if instance.entry != "rule" { return true; }
     // let st = get_state(timeline, point);
 
     return false;
@@ -144,14 +162,16 @@ fn allowed(instance: &Instance, timeline: &Timeline, point: u64, assignment: &As
 
 /*  Creates a new Instance */
 
-fn mk_instance(entry: &Entry, id: String) -> Instance {
-    return Instance{ entry: entry, id: id };
+fn _mk_instance(entry: &Entry, id: String) -> Instance {
+    return Instance{ id: id, entry: entry.id.to_string() };
 }
 
-fn mk_object_store<'a>() -> ObjectStore<'a>{
+fn mk_object_store<'a>() -> ObjectStore{
     let mut os = ObjectStore::new();
 
     os.add_entry(Entry{ id: "rule".to_string() });
+    os.add_field(Field{ id: "criteria".to_string(), entry: "rule".to_owned()});
+    os.add_field(Field{ id: "author".to_string(), entry: "rule".to_owned()});
 
     // os.entries.push(Box::new(Entry{ id: "rule".to_string() })); // magic entry id for rules
     // os.entries.push(Box::new(Entry{ id: "user".to_string() })); // magic entry id for users (actual people)
