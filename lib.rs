@@ -18,17 +18,22 @@ struct RuleMaps<'a> {
     pub fields: FrozenMap<String, Box<Field<'a>>>,
 }
 
-impl RuleMaps<'_> {
-    fn new() -> RuleMaps<'static> {
+impl<'a> RuleMaps<'_> {
+    fn new() -> RuleMaps<'a> {
 	RuleMaps { entries: FrozenMap::new(), fields: FrozenMap::new() }
     }
+    
+    fn add_entry(&self, entry: Entry) {
+	self.entries.insert(entry.0.clone(), Box::new(entry));
+    }
+
 }
 
 fn main() {
-    let mut maps = RuleMaps::new();
+    let maps = RuleMaps::new();
     
-    maps.entries.insert("test".to_string(), Box::new(Entry("e1".to_string())));
-    maps.fields.insert("test".to_string(), Box::new(Field{id: "f1".to_string(), entry: maps.entries.get("test").unwrap()}));
+    maps.entries.insert("test_entry".to_string(), Box::new(Entry("e1".to_string())));
+    maps.fields.insert("test_field".to_string(), Box::new(Field{id: "f1".to_string(), entry: maps.entries.get("test_entry").unwrap()}));
 
     let _t = maps.entries.get("test");
 
